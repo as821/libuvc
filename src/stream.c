@@ -559,8 +559,14 @@ uvc_error_t uvc_get_still_ctrl_format_size(
   stream_if = _uvc_get_stream_if(devh, ctrl->bInterfaceNumber);
 
   /* Only method 2 is supported */
-  if(!stream_if || stream_if->bStillCaptureMethod != 2)
+  if(!stream_if) {
+    printf("No still capture methods supported.\n");
     return UVC_ERROR_NOT_SUPPORTED;
+  }
+  if(stream_if->bStillCaptureMethod != 2) {
+    printf("Invalid still capture method: %d\n", stream_if->bStillCaptureMethod);  
+    return UVC_ERROR_NOT_SUPPORTED;
+  }
 
   DL_FOREACH(stream_if->format_descs, format) {
 

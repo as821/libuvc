@@ -1,6 +1,9 @@
 #include "libuvc/libuvc.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
+
+#include <sys/time.h>
 
 /* This callback function runs once per frame. Use it to perform any
  * quick processing you need, or have it put the frame into your application's
@@ -22,8 +25,13 @@ void cb(uvc_frame_t *frame, void *ptr) {
     return;
   }
 
-  printf("callback! frame_format = %d, width = %d, height = %d, length = %lu, ptr = %p\n",
-    frame->frame_format, frame->width, frame->height, frame->data_bytes, ptr);
+
+  struct timeval time;
+  gettimeofday(&time, NULL);
+  long long milli = (long long) time.tv_sec * 1000LL + time.tv_usec / 1000;
+
+  printf("\t\t(%lld) callback! length = %lu\n",
+    milli, frame->data_bytes);
 
   switch (frame->frame_format) {
   case UVC_FRAME_FORMAT_H264:
@@ -94,6 +102,8 @@ int main(int argc, char **argv) {
   uvc_stream_ctrl_t ctrl;
   uvc_error_t res;
 
+  uvc_still_ctrl_t still_ctrl;
+
   /* Initialize a UVC service context. Libuvc will set up its own libusb
    * context. Replace NULL with a libusb_context pointer to run libuvc
    * from an existing libusb context. */
@@ -107,13 +117,12 @@ int main(int argc, char **argv) {
   puts("UVC initialized");
 
   /* Locates the first attached UVC device, stores in dev */
-  res = uvc_find_device(
-      ctx, &dev,
-      0, 0, NULL); /* filter devices: vendor_id, product_id, "serial_num" */
+  res = uvc_find_device(ctx, &dev, 0, 0, NULL); /* filter devices: vendor_id, product_id, "serial_num" */
 
   if (res < 0) {
     uvc_perror(res, "uvc_find_device"); /* no devices found */
-  } else {
+  } 
+  else {
     puts("Device found");
 
     /* Try to open the device: requires exclusive access */
@@ -121,7 +130,8 @@ int main(int argc, char **argv) {
 
     if (res < 0) {
       uvc_perror(res, "uvc_open"); /* unable to open device */
-    } else {
+    } 
+    else {
       puts("Device opened");
 
       /* Print out a message containing all the information that libuvc
@@ -148,9 +158,13 @@ int main(int argc, char **argv) {
       }
 
       if (frame_desc) {
-        width = frame_desc->wWidth;
-        height = frame_desc->wHeight;
+        width = 640; // frame_desc->wWidth;
+        height = 480; // frame_desc->wHeight;
         fps = 10000000 / frame_desc->dwDefaultFrameInterval;
+      }
+      else {
+        printf("FATAL");
+        exit(1);
       }
 
       printf("\nFirst format: (%4s) %dx%d %dfps\n", format_desc->fourccFormat, width, height, fps);
@@ -168,6 +182,15 @@ int main(int argc, char **argv) {
       if (res < 0) {
         uvc_perror(res, "get_mode"); /* device doesn't provide a matching stream */
       } else {
+        
+        // Get still image profile
+        res = uvc_get_still_ctrl_format_size(devh, &ctrl, &still_ctrl, 3840, 2160);
+        if(res < 0) {
+          printf("Still config failure!\n");
+          uvc_perror(res, "get_mode");
+          exit(1);
+        }
+        
         /* Start the video stream. The library will call user function cb:
          *   cb(frame, (void *) 12345)
          */
@@ -199,7 +222,18 @@ int main(int argc, char **argv) {
             uvc_perror(res, " ... uvc_set_ae_mode failed to enable auto exposure mode");
           }
 
-          sleep(10); /* stream for 10 seconds */
+          sleep(1);
+          for(int idx = 0; idx < 10; idx++) {
+            struct timeval time;
+            gettimeofday(&time, NULL);
+            long long milli = (long long) time.tv_sec * 1000LL + time.tv_usec / 1000;            
+            
+            printf("\tTRIGGER STILL (%lld)\n", milli);
+            uvc_trigger_still(devh, &still_ctrl);
+            sleep(1);
+          }
+
+          // sleep(10); /* stream for 10 seconds */
 
           /* End the stream. Blocks until last callback is serviced */
           uvc_stop_streaming(devh);
