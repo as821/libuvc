@@ -15,7 +15,7 @@ void cb(uvc_frame_t *frame, void *ptr) {
   static int jpeg_count = 0;
   static const char *H264_FILE = "iOSDevLog.h264";
   static const char *MJPEG_FILE = ".jpeg";
-  // char filename[16];
+  char filename[150];
 
   /* We'll convert the image from YUV/JPEG to BGR, so allocate space */
   bgr = uvc_allocate_frame(frame->width * frame->height * 3);
@@ -26,9 +26,6 @@ void cb(uvc_frame_t *frame, void *ptr) {
 
   printf("callback! frame_format = %d, width = %d, height = %d, length = %lu, ptr = %p\n",
     frame->frame_format, frame->width, frame->height, frame->data_bytes, ptr);
-
-
-  const char* filename = "/home/armstrong/libuvc/build/img.png";
 
   switch (frame->frame_format) {
   case UVC_FRAME_FORMAT_H264:
@@ -43,10 +40,12 @@ void cb(uvc_frame_t *frame, void *ptr) {
      * fwrite(frame->data, 1, frame->data_bytes, fp);
      * fclose(fp); */
 
-    // sprintf(filename, "%d%s", jpeg_count++, "/home/armstrong/libuvc/build/img.png");
-    fp = fopen(filename, "w");
-    fwrite(frame->data, 1, frame->data_bytes, fp);
-    fclose(fp);
+    if(jpeg_count % 10 == 0) {
+      sprintf(filename, "%s%d%s", "/home/armstrong/libuvc/build/cap/img_", jpeg_count++, MJPEG_FILE);
+      fp = fopen(filename, "w");
+      fwrite(frame->data, 1, frame->data_bytes, fp);
+      fclose(fp);
+    }
 
     break;
   case UVC_COLOR_FORMAT_YUYV:
@@ -118,7 +117,7 @@ int main(int argc, char **argv) {
   puts("UVC initialized");
 
   // select the specified serial number, if given
-  if(argc == 2) {
+  if(argc >= 2) {
     printf("Searching for device with index: %s\n", argv[1]);
     // res = uvc_find_device(ctx, &dev, 0, 0, argv[1]); /* filter devices: vendor_id, product_id, "serial_num" */
     res = uvc_find_device_idx(ctx, &dev, atoi(argv[1]));

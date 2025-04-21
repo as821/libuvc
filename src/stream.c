@@ -1316,30 +1316,22 @@ void *_uvc_user_caller(void *arg) {
 
   do {
     pthread_mutex_lock(&strmh->cb_mutex);
-    
-    printf("here (-1)\n");
 
     while (strmh->running && last_seq == strmh->hold_seq) {
       pthread_cond_wait(&strmh->cb_cond, &strmh->cb_mutex);
     }
-
-    printf("here (0)\n");
 
     if (!strmh->running) {
       printf("DONE RUNNING\n");
       pthread_mutex_unlock(&strmh->cb_mutex);
       break;
     }
-
-    printf("here (1)\n");
     
     last_seq = strmh->hold_seq;
     _uvc_populate_frame(strmh);
     
     pthread_mutex_unlock(&strmh->cb_mutex);
     
-
-    printf("CALLING USER...\n");
     strmh->user_cb(&strmh->frame, strmh->user_ptr);
   } while(1);
 
