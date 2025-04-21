@@ -496,6 +496,10 @@ uvc_error_t uvc_get_stream_ctrl_format_size(
         uvc_claim_if(devh, ctrl->bInterfaceNumber);
         /* get the max values */
         uvc_query_stream_ctrl( devh, ctrl, 1, UVC_GET_MAX);
+        // ctrl->dwMaxPayloadTransferSize = 512;
+        printf("\n\nSTREAMING INTERFACE: %d (%u)\n", stream_if->bInterfaceNumber, ctrl->dwMaxPayloadTransferSize);
+        // continue;
+
 
         if (frame->intervals) {
           for (interval = frame->intervals; *interval; ++interval) {
@@ -1142,6 +1146,11 @@ uvc_error_t uvc_stream_start(
     /* Index of the altsetting */
     int alt_idx, ep_idx;
     
+    printf("PRIOR %d, %d\n", strmh->cur_ctrl.dwMaxPayloadTransferSize, strmh->cur_ctrl.dwMaxVideoFrameSize);
+    strmh->cur_ctrl.dwMaxPayloadTransferSize = 640; 
+    // strmh->cur_ctrl.dwMaxPayloadTransferSize = 1600;     // this works!
+    // strmh->cur_ctrl.dwMaxVideoFrameSize = 512;           // highest setting that doesn't work for some reason
+
     config_bytes_per_packet = strmh->cur_ctrl.dwMaxPayloadTransferSize;
 
     /* Go through the altsettings and find one whose packets are at least
@@ -1175,6 +1184,7 @@ uvc_error_t uvc_stream_start(
         }
       }
 
+      printf("\n\nalt %d: %ld, %ld\n\n", alt_idx, endpoint_bytes_per_packet, config_bytes_per_packet);
       if (endpoint_bytes_per_packet >= config_bytes_per_packet) {
         /* Transfers will be at most one frame long: Divide the maximum frame size
          * by the size of the endpoint and round up */
@@ -1196,11 +1206,14 @@ uvc_error_t uvc_stream_start(
       goto fail;
     }
 
+    printf("SELECTED ALT SETTING: %d\n", alt_idx);
+
     /* Select the altsetting */
     ret = libusb_set_interface_alt_setting(strmh->devh->usb_devh,
                                            altsetting->bInterfaceNumber,
                                            altsetting->bAlternateSetting);
     if (ret != UVC_SUCCESS) {
+      printf("FAILED libusb_set_interface_alt_setting\n");
       UVC_DEBUG("libusb_set_interface_alt_setting failed");
       goto fail;
     }
@@ -1247,6 +1260,7 @@ uvc_error_t uvc_stream_start(
       transfer_id++) {
     ret = libusb_submit_transfer(strmh->transfers[transfer_id]);
     if (ret != UVC_SUCCESS) {
+      printf("FAILED libusb_submit_transfer: %d\n", ret);
       UVC_DEBUG("libusb_submit_transfer failed: %d",ret);
       break;
     }
@@ -1260,6 +1274,8 @@ uvc_error_t uvc_stream_start(
     }
     ret = UVC_SUCCESS;
   }
+
+  printf("STREAM START SUCCESS\n");
 
   UVC_EXIT(ret);
   return ret;
@@ -1300,21 +1316,30 @@ void *_uvc_user_caller(void *arg) {
 
   do {
     pthread_mutex_lock(&strmh->cb_mutex);
+    
+    printf("here (-1)\n");
 
     while (strmh->running && last_seq == strmh->hold_seq) {
       pthread_cond_wait(&strmh->cb_cond, &strmh->cb_mutex);
     }
 
+    printf("here (0)\n");
+
     if (!strmh->running) {
+      printf("DONE RUNNING\n");
       pthread_mutex_unlock(&strmh->cb_mutex);
       break;
     }
+
+    printf("here (1)\n");
     
     last_seq = strmh->hold_seq;
     _uvc_populate_frame(strmh);
     
     pthread_mutex_unlock(&strmh->cb_mutex);
     
+
+    printf("CALLING USER...\n");
     strmh->user_cb(&strmh->frame, strmh->user_ptr);
   } while(1);
 

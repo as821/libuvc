@@ -9,11 +9,12 @@ void cb(uvc_frame_t *frame, void *ptr) {
   uvc_frame_t *bgr;
   uvc_error_t ret;
   enum uvc_frame_format *frame_format = (enum uvc_frame_format *)ptr;
-  /* FILE *fp;
-   * static int jpeg_count = 0;
-   * static const char *H264_FILE = "iOSDevLog.h264";
-   * static const char *MJPEG_FILE = ".jpeg";
-   * char filename[16]; */
+  
+  FILE *fp;
+  static int jpeg_count = 0;
+  static const char *H264_FILE = "iOSDevLog.h264";
+  static const char *MJPEG_FILE = ".jpeg";
+  // char filename[16];
 
   /* We'll convert the image from YUV/JPEG to BGR, so allocate space */
   bgr = uvc_allocate_frame(frame->width * frame->height * 3);
@@ -24,6 +25,9 @@ void cb(uvc_frame_t *frame, void *ptr) {
 
   printf("callback! frame_format = %d, width = %d, height = %d, length = %lu, ptr = %p\n",
     frame->frame_format, frame->width, frame->height, frame->data_bytes, ptr);
+
+
+  const char* filename = "/home/armstrong/libuvc/build/img.png";
 
   switch (frame->frame_format) {
   case UVC_FRAME_FORMAT_H264:
@@ -37,6 +41,12 @@ void cb(uvc_frame_t *frame, void *ptr) {
      * fp = fopen(filename, "w");
      * fwrite(frame->data, 1, frame->data_bytes, fp);
      * fclose(fp); */
+
+    // sprintf(filename, "%d%s", jpeg_count++, "/home/armstrong/libuvc/build/img.png");
+    fp = fopen(filename, "w");
+    fwrite(frame->data, 1, frame->data_bytes, fp);
+    fclose(fp);
+
     break;
   case UVC_COLOR_FORMAT_YUYV:
     /* Do the BGR conversion */
@@ -152,6 +162,8 @@ int main(int argc, char **argv) {
         height = frame_desc->wHeight;
         fps = 10000000 / frame_desc->dwDefaultFrameInterval;
       }
+
+      fps = 15;
 
       printf("\nFirst format: (%4s) %dx%d %dfps\n", format_desc->fourccFormat, width, height, fps);
 
