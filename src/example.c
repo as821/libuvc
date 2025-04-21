@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
         fps = 10000000 / frame_desc->dwDefaultFrameInterval;
       }
 
-      fps = 15;
+      fps = 20;
 
       printf("\nFirst format: (%4s) %dx%d %dfps\n", format_desc->fourccFormat, width, height, fps);
 
