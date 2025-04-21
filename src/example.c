@@ -6,7 +6,18 @@
 /* This callback function runs once per frame. Use it to perform any
  * quick processing you need, or have it put the frame into your application's
  * input queue. If this function takes too long, you'll start losing frames. */
+
+
+
+struct timeval last_frame_tv;
+
+
 void cb(uvc_frame_t *frame, void *ptr) {
+  
+  struct timeval recv_tv, callback_end_tv;
+  gettimeofday(&recv_tv, NULL);
+  
+  
   uvc_frame_t *bgr;
   uvc_error_t ret;
   enum uvc_frame_format *frame_format = (enum uvc_frame_format *)ptr;
@@ -24,8 +35,7 @@ void cb(uvc_frame_t *frame, void *ptr) {
     return;
   }
 
-  printf("callback! frame_format = %d, width = %d, height = %d, length = %lu, ptr = %p\n",
-    frame->frame_format, frame->width, frame->height, frame->data_bytes, ptr);
+  // printf("callback! frame_format = %d, width = %d, height = %d, length = %lu, ptr = %p\n", frame->frame_format, frame->width, frame->height, frame->data_bytes, ptr);
 
   switch (frame->frame_format) {
   case UVC_FRAME_FORMAT_H264:
@@ -39,13 +49,13 @@ void cb(uvc_frame_t *frame, void *ptr) {
      * fp = fopen(filename, "w");
      * fwrite(frame->data, 1, frame->data_bytes, fp);
      * fclose(fp); */
-
-    if(jpeg_count % 10 == 0) {
-      sprintf(filename, "%s%d%s", "/home/armstrong/libuvc/build/cap/img_", jpeg_count++, MJPEG_FILE);
+    if(jpeg_count % 100 == 0) {
+      sprintf(filename, "%s%d%s", "/home/armstrong/libuvc/build/cap/img_", jpeg_count, MJPEG_FILE);
       fp = fopen(filename, "w");
       fwrite(frame->data, 1, frame->data_bytes, fp);
       fclose(fp);
     }
+    jpeg_count++;
 
     break;
   case UVC_COLOR_FORMAT_YUYV:
@@ -61,9 +71,20 @@ void cb(uvc_frame_t *frame, void *ptr) {
     break;
   }
 
-  if (frame->sequence % 30 == 0) {
-    printf(" * got image %u\n",  frame->sequence);
-  }
+
+  gettimeofday(&callback_end_tv, NULL);
+  double time_since_last = (recv_tv.tv_sec - last_frame_tv.tv_sec) + (recv_tv.tv_usec - last_frame_tv.tv_usec) / 1e6;
+  double callback_time = (callback_end_tv.tv_sec - recv_tv.tv_sec) + (callback_end_tv.tv_usec - recv_tv.tv_usec) / 1e6;
+  last_frame_tv = callback_end_tv;
+
+  printf("frame: %d (%f, %f)\n", jpeg_count, time_since_last, callback_time);
+
+  
+
+
+  // if (frame->sequence % 30 == 0) {
+  //   printf(" * got image %u\n",  frame->sequence);
+  // }
 
   /* Call a user function:
    *
@@ -169,7 +190,7 @@ int main(int argc, char **argv) {
         fps = 10000000 / frame_desc->dwDefaultFrameInterval;
       }
 
-      fps = 20;
+      fps = 15;
 
       printf("\nFirst format: (%4s) %dx%d %dfps\n", format_desc->fourccFormat, width, height, fps);
 
@@ -186,6 +207,9 @@ int main(int argc, char **argv) {
       if (res < 0) {
         uvc_perror(res, "get_mode"); /* device doesn't provide a matching stream */
       } else {
+
+        gettimeofday(&last_frame_tv, NULL);
+
         /* Start the video stream. The library will call user function cb:
          *   cb(frame, (void *) 12345)
          */
@@ -217,7 +241,8 @@ int main(int argc, char **argv) {
             uvc_perror(res, " ... uvc_set_ae_mode failed to enable auto exposure mode");
           }
 
-          sleep(120);
+          // Stream forever
+          while(1) {sleep(120);}
 
           /* End the stream. Blocks until last callback is serviced */
           uvc_stop_streaming(devh);
