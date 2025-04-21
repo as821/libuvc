@@ -1147,7 +1147,7 @@ uvc_error_t uvc_stream_start(
     int alt_idx, ep_idx;
     
     printf("PRIOR %d, %d\n", strmh->cur_ctrl.dwMaxPayloadTransferSize, strmh->cur_ctrl.dwMaxVideoFrameSize);
-    strmh->cur_ctrl.dwMaxPayloadTransferSize = 640; 
+    strmh->cur_ctrl.dwMaxPayloadTransferSize = 940; 
     // strmh->cur_ctrl.dwMaxPayloadTransferSize = 1600;     // this works!
     // strmh->cur_ctrl.dwMaxVideoFrameSize = 512;           // highest setting that doesn't work for some reason
 
