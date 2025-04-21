@@ -116,10 +116,15 @@ int main(int argc, char **argv) {
 
   puts("UVC initialized");
 
-  /* Locates the first attached UVC device, stores in dev */
-  res = uvc_find_device(
-      ctx, &dev,
-      0, 0, NULL); /* filter devices: vendor_id, product_id, "serial_num" */
+  // select the specified serial number, if given
+  if(argc == 2) {
+    printf("Searching for device with serial number: %s\n", argv[1]);
+    res = uvc_find_device(ctx, &dev, 0, 0, argv[1]); /* filter devices: vendor_id, product_id, "serial_num" */
+  }
+  else {
+    /* Locates the first attached UVC device, stores in dev */
+    res = uvc_find_device(ctx, &dev, 0, 0, NULL); /* filter devices: vendor_id, product_id, "serial_num" */
+  }
 
   if (res < 0) {
     uvc_perror(res, "uvc_find_device"); /* no devices found */
@@ -211,7 +216,7 @@ int main(int argc, char **argv) {
             uvc_perror(res, " ... uvc_set_ae_mode failed to enable auto exposure mode");
           }
 
-          sleep(10); /* stream for 10 seconds */
+          sleep(120);
 
           /* End the stream. Blocks until last callback is serviced */
           uvc_stop_streaming(devh);
