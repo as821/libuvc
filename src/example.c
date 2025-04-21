@@ -1,6 +1,7 @@
 #include "libuvc/libuvc.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 /* This callback function runs once per frame. Use it to perform any
  * quick processing you need, or have it put the frame into your application's
@@ -118,8 +119,9 @@ int main(int argc, char **argv) {
 
   // select the specified serial number, if given
   if(argc == 2) {
-    printf("Searching for device with serial number: %s\n", argv[1]);
-    res = uvc_find_device(ctx, &dev, 0, 0, argv[1]); /* filter devices: vendor_id, product_id, "serial_num" */
+    printf("Searching for device with index: %s\n", argv[1]);
+    // res = uvc_find_device(ctx, &dev, 0, 0, argv[1]); /* filter devices: vendor_id, product_id, "serial_num" */
+    res = uvc_find_device_idx(ctx, &dev, atoi(argv[1]));
   }
   else {
     /* Locates the first attached UVC device, stores in dev */

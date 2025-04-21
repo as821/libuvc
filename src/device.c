@@ -176,6 +176,50 @@ uvc_error_t uvc_find_device(
   }
 }
 
+
+
+uvc_error_t uvc_find_device_idx(uvc_context_t *ctx, uvc_device_t **dev, int dev_idx) {
+  uvc_error_t ret = UVC_SUCCESS;
+  uvc_device_t **list;
+  int found_dev;
+
+  UVC_ENTER();
+
+  ret = uvc_get_device_list(ctx, &list);
+
+  if (ret != UVC_SUCCESS) {
+    UVC_EXIT(ret);
+    return ret;
+  }
+
+
+  // linear search to check number of device
+  int len = 0;
+  while(list[len] != NULL) {
+    len++;
+  }
+
+  if(len <= dev_idx) {
+    return UVC_ERROR_NO_DEVICE;
+  }
+
+
+  uvc_device_t *test_dev = list[dev_idx];
+  uvc_device_descriptor_t *desc;
+  if (uvc_get_device_descriptor(test_dev, &desc) != UVC_SUCCESS)
+    return UVC_ERROR_NO_DEVICE;
+  
+  uvc_free_device_descriptor(desc);
+  uvc_ref_device(test_dev);
+  uvc_free_device_list(list, 1);
+
+  *dev = test_dev;
+  UVC_EXIT(UVC_SUCCESS);
+  return UVC_SUCCESS;
+}
+
+
+
 /** @brief Finds all cameras identified by vendor, product and/or serial number
  * @ingroup device
  *
