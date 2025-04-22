@@ -225,8 +225,9 @@ int main(int argc, char **argv) {
           
           // if(argc >= 3) {
             // set up manual exposure (vs. shutter priority??)
-            const uint8_t UVC_AUTO_EXPOSURE_MODE_MANUAL = 1;
-            res = uvc_set_ae_mode(devh, UVC_AUTO_EXPOSURE_MODE_MANUAL);
+            // const uint8_t UVC_AUTO_EXPOSURE_MODE_MANUAL = 1;
+            const uint8_t UVC_AUTO_EXPOSURE_MODE_SHUTTER_PRIORITY = 4;
+            res = uvc_set_ae_mode(devh, UVC_AUTO_EXPOSURE_MODE_SHUTTER_PRIORITY);
             if (res < 0) {
               uvc_perror(res, " ... uvc_set_ae_mode failed to enable manual exposure");
               exit(1);
@@ -235,7 +236,7 @@ int main(int argc, char **argv) {
               puts(" ... enabled manual exposure mode");
 
             // set manual exposure --> increments of 1/10000th of a second. 1000 is 0.1s. Note that this will be overridden by the frame rate if needed
-            res = uvc_set_exposure_abs(devh, 1000);
+            res = uvc_set_exposure_abs(devh, 500);
             if (res < 0) {
               uvc_perror(res, " ... uvc_set_exposure_abs failed");
               exit(1);
