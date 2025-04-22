@@ -498,14 +498,20 @@ uvc_error_t uvc_get_stream_ctrl_format_size(
         uvc_query_stream_ctrl( devh, ctrl, 1, UVC_GET_MIN);
         printf("\n\nMIN SETTINGS: \n");
         uvc_print_stream_ctrl(ctrl, stderr);
-
+        uint16_t min_kfr = ctrl->wKeyFrameRate;
+        uint16_t min_pfr = ctrl->wPFrameRate;
+        uint16_t min_comp_window = ctrl->wCompWindowSize;
+        
+        // libuvc originally just used max values. default to max but overwrite as needed
         uvc_query_stream_ctrl( devh, ctrl, 1, UVC_GET_MAX);
         printf("\n\nMAX SETTINGS: \n");
         uvc_print_stream_ctrl(ctrl, stderr);
 
-
-
-        // TODO: query min + set the compression parameters same as the Linux UVC driver
+        // set these values to min, keep wCompQuality at max
+        // https://github.com/torvalds/linux/blob/master/drivers/media/usb/uvc/uvc_video.c#L468
+        ctrl->wKeyFrameRate = min_kfr;
+        ctrl->wPFrameRate = min_pfr;
+        ctrl->wCompWindowSize = min_comp_window;
 
 
         printf("\n\nSTREAMING INTERFACE: %d (%u)\n", stream_if->bInterfaceNumber, ctrl->dwMaxPayloadTransferSize);
