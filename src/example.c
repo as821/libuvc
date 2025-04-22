@@ -222,26 +222,45 @@ int main(int argc, char **argv) {
           uvc_perror(res, "start_streaming"); /* unable to start stream */
         } else {
           puts("Streaming...");
-
-          /* enable auto exposure - see uvc_set_ae_mode documentation */
-          puts("Enabling auto exposure ...");
-          const uint8_t UVC_AUTO_EXPOSURE_MODE_AUTO = 2;
-          res = uvc_set_ae_mode(devh, UVC_AUTO_EXPOSURE_MODE_AUTO);
-          if (res == UVC_SUCCESS) {
-            puts(" ... enabled auto exposure");
-          } else if (res == UVC_ERROR_PIPE) {
-            /* this error indicates that the camera does not support the full AE mode;
-             * try again, using aperture priority mode (fixed aperture, variable exposure time) */
-            puts(" ... full AE not supported, trying aperture priority mode");
-            const uint8_t UVC_AUTO_EXPOSURE_MODE_APERTURE_PRIORITY = 8;
-            res = uvc_set_ae_mode(devh, UVC_AUTO_EXPOSURE_MODE_APERTURE_PRIORITY);
+          
+          if(argc >= 3) {
+            // set up manual exposure (vs. shutter priority??)
+            const uint8_t UVC_AUTO_EXPOSURE_MODE_MANUAL = 1;
+            res = uvc_set_ae_mode(devh, UVC_AUTO_EXPOSURE_MODE_MANUAL);
             if (res < 0) {
-              uvc_perror(res, " ... uvc_set_ae_mode failed to enable aperture priority mode");
-            } else {
-              puts(" ... enabled aperture priority auto exposure mode");
+              uvc_perror(res, " ... uvc_set_ae_mode failed to enable manual exposure");
+              exit(1);
             }
-          } else {
-            uvc_perror(res, " ... uvc_set_ae_mode failed to enable auto exposure mode");
+            else
+              puts(" ... enabled manual exposure mode");
+
+            // set manual exposure --> increments of 1/10000th of a second. 1000 is 0.1s. Note that this will be overridden by the frame rate if needed
+            res = uvc_set_exposure_abs(devh, 1000);
+            if (res < 0) {
+              uvc_perror(res, " ... uvc_set_exposure_abs failed");
+              exit(1);
+            }
+            else
+              puts(" ... set manual exposure time");
+          }
+          else {
+            // puts("Enabling auto exposure ...");
+            // const uint8_t UVC_AUTO_EXPOSURE_MODE_AUTO = 2;
+            // res = uvc_set_ae_mode(devh, UVC_AUTO_EXPOSURE_MODE_AUTO);
+            // if (res == UVC_SUCCESS)
+            //   puts(" ... enabled auto exposure");
+            // else if (res == UVC_ERROR_PIPE) {
+              /* this error indicates that the camera does not support the full AE mode;
+              * try again, using aperture priority mode (fixed aperture, variable exposure time) */
+              puts(" ... full AE not supported, trying aperture priority mode");
+              const uint8_t UVC_AUTO_EXPOSURE_MODE_APERTURE_PRIORITY = 8;
+              res = uvc_set_ae_mode(devh, UVC_AUTO_EXPOSURE_MODE_APERTURE_PRIORITY);
+              if (res < 0)
+                uvc_perror(res, " ... uvc_set_ae_mode failed to enable aperture priority mode");
+              else
+                puts(" ... enabled aperture priority auto exposure mode");
+            // else
+            //   uvc_perror(res, " ... uvc_set_ae_mode failed to enable auto exposure mode");
           }
 
           // Stream forever
