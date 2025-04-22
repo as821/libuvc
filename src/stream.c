@@ -475,6 +475,8 @@ uvc_error_t uvc_get_stream_ctrl_format_size(
     int fps) {
   uvc_streaming_interface_t *stream_if;
 
+  uvc_error_t out;
+
   /* find a matching frame descriptor and interval */
   DL_FOREACH(devh->info->stream_ifs, stream_if) {
     uvc_format_desc_t *format;
@@ -553,7 +555,17 @@ uvc_error_t uvc_get_stream_ctrl_format_size(
   return UVC_ERROR_INVALID_MODE;
 
 found:
-  return uvc_probe_stream_ctrl(devh, ctrl);
+  out = uvc_probe_stream_ctrl(devh, ctrl);
+
+  ctrl->dwMaxPayloadTransferSize = 944; 
+
+  printf("\n\nRequested control settings:\n");
+  uvc_print_stream_ctrl(ctrl, stderr);
+
+
+  printf("\n\nNegotiated control settings:\n");
+  uvc_print_stream_ctrl(ctrl, stderr);
+  return out;
 }
 
 /** Get a negotiated still control block for some common parameters.
