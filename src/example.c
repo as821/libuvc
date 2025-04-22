@@ -11,6 +11,8 @@
 
 struct timeval last_frame_tv;
 
+int camera_id = -1;
+
 
 void cb(uvc_frame_t *frame, void *ptr) {
   
@@ -50,7 +52,7 @@ void cb(uvc_frame_t *frame, void *ptr) {
      * fwrite(frame->data, 1, frame->data_bytes, fp);
      * fclose(fp); */
     if(jpeg_count % 100 == 0) {
-      sprintf(filename, "%s%d%s", "/home/armstrong/libuvc/build/cap/img_", jpeg_count, MJPEG_FILE);
+      sprintf(filename, "%s%d%s%d%s", "/home/armstrong/libuvc/build/cap/img_", jpeg_count, "_", camera_id, MJPEG_FILE);
       fp = fopen(filename, "w");
       fwrite(frame->data, 1, frame->data_bytes, fp);
       fclose(fp);
@@ -77,7 +79,7 @@ void cb(uvc_frame_t *frame, void *ptr) {
   double callback_time = (callback_end_tv.tv_sec - recv_tv.tv_sec) + (callback_end_tv.tv_usec - recv_tv.tv_usec) / 1e6;
   last_frame_tv = callback_end_tv;
 
-  printf("frame: %d (%f, %f)\n", jpeg_count, time_since_last, callback_time);
+  printf("frame: %d (%f, %f) -> %ld\n", jpeg_count, time_since_last, callback_time, frame->data_bytes);
 
   
 
@@ -142,6 +144,7 @@ int main(int argc, char **argv) {
     printf("Searching for device with index: %s\n", argv[1]);
     // res = uvc_find_device(ctx, &dev, 0, 0, argv[1]); /* filter devices: vendor_id, product_id, "serial_num" */
     res = uvc_find_device_idx(ctx, &dev, atoi(argv[1]));
+    camera_id = atoi(argv[1]);
   }
   else {
     /* Locates the first attached UVC device, stores in dev */
@@ -190,7 +193,7 @@ int main(int argc, char **argv) {
         fps = 10000000 / frame_desc->dwDefaultFrameInterval;
       }
 
-      fps = 20;
+      fps = 15;   // 4 @ 20fps is flaky :(
 
       printf("\nFirst format: (%4s) %dx%d %dfps\n", format_desc->fourccFormat, width, height, fps);
 
