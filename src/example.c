@@ -52,10 +52,10 @@ void cb(uvc_frame_t *frame, void *ptr) {
      * fwrite(frame->data, 1, frame->data_bytes, fp);
      * fclose(fp); */
     if(jpeg_count % 100 == 0) {
-      sprintf(filename, "%s%d%s%d%s", "/home/armstrong/libuvc/build/cap/img_", jpeg_count, "_", camera_id, MJPEG_FILE);
-      fp = fopen(filename, "w");
-      fwrite(frame->data, 1, frame->data_bytes, fp);
-      fclose(fp);
+      // sprintf(filename, "%s%d%s%d%s", "/home/armstrong/libuvc/build/cap/img_", jpeg_count, "_", camera_id, MJPEG_FILE);
+      // fp = fopen(filename, "w");
+      // fwrite(frame->data, 1, frame->data_bytes, fp);
+      // fclose(fp);
     }
     jpeg_count++;
 

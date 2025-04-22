@@ -1239,7 +1239,7 @@ uvc_error_t uvc_stream_start(
                                            altsetting->bInterfaceNumber,
                                            altsetting->bAlternateSetting);
     if (ret != UVC_SUCCESS) {
-      printf("FAILED libusb_set_interface_alt_setting\n");
+      printf("FAILED libusb_set_interface_alt_setting (%d)\n", ret);
       printf("libusb_set_interface_alt_setting failed\n");
       goto fail;
     }
