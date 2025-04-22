@@ -494,7 +494,7 @@ uvc_error_t uvc_get_stream_ctrl_format_size(
         uint32_t *interval;
 
         ctrl->bInterfaceNumber = stream_if->bInterfaceNumber;
-        printf("claiming streaming interface %d", stream_if->bInterfaceNumber );
+        printf("claiming streaming interface %d\n", stream_if->bInterfaceNumber );
         uvc_claim_if(devh, ctrl->bInterfaceNumber);
         /* get the max values */
         uvc_query_stream_ctrl( devh, ctrl, 1, UVC_GET_MIN);
@@ -648,7 +648,7 @@ uvc_error_t uvc_probe_stream_ctrl(
   uvc_query_stream_ctrl( devh, ctrl, 1, UVC_GET_CUR );
 
   if(!_uvc_stream_params_negotiated(&required_ctrl, ctrl)) {
-    printf("Unable to negotiate streaming format");
+    printf("Unable to negotiate streaming format\n");
     return UVC_ERROR_INVALID_MODE;
   }
 
@@ -781,7 +781,7 @@ void _uvc_process_payload(uvc_stream_handle_t *strmh, uint8_t *payload, size_t p
     header_info = payload[1];
 
     if (header_info & 0x40) {
-      printf("bad packet: error bit set");
+      printf("bad packet: error bit set\n");
       return;
     }
 
@@ -856,7 +856,7 @@ void LIBUSB_CALL _uvc_stream_callback(struct libusb_transfer *transfer) {
         pkt = transfer->iso_packet_desc + packet_id;
 
         if (pkt->status != 0) {
-          printf("bad packet (isochronous transfer); status: %d", pkt->status);
+          printf("bad packet (isochronous transfer); status: %d\n", pkt->status);
           continue;
         }
 
@@ -871,13 +871,13 @@ void LIBUSB_CALL _uvc_stream_callback(struct libusb_transfer *transfer) {
   case LIBUSB_TRANSFER_ERROR:
   case LIBUSB_TRANSFER_NO_DEVICE: {
     int i;
-    printf("not retrying transfer, status = %d", transfer->status);
+    printf("not retrying transfer, status = %d\n", transfer->status);
     pthread_mutex_lock(&strmh->cb_mutex);
 
     /* Mark transfer as deleted. */
     for(i=0; i < LIBUVC_NUM_TRANSFER_BUFS; i++) {
       if(strmh->transfers[i] == transfer) {
-        printf("Freeing transfer %d (%p)", i, transfer);
+        printf("Freeing transfer %d (%p)\n", i, transfer);
         free(transfer->buffer);
         libusb_free_transfer(transfer);
         strmh->transfers[i] = NULL;
@@ -885,7 +885,7 @@ void LIBUSB_CALL _uvc_stream_callback(struct libusb_transfer *transfer) {
       }
     }
     if(i == LIBUVC_NUM_TRANSFER_BUFS ) {
-      printf("transfer %p not found; not freeing!", transfer);
+      printf("transfer %p not found; not freeing!\n", transfer);
     }
 
     resubmit = 0;
@@ -898,7 +898,7 @@ void LIBUSB_CALL _uvc_stream_callback(struct libusb_transfer *transfer) {
   case LIBUSB_TRANSFER_TIMED_OUT:
   case LIBUSB_TRANSFER_STALL:
   case LIBUSB_TRANSFER_OVERFLOW:
-    printf("retrying transfer, status = %d", transfer->status);
+    printf("retrying transfer, status = %d\n", transfer->status);
     break;
   }
   
@@ -913,7 +913,7 @@ void LIBUSB_CALL _uvc_stream_callback(struct libusb_transfer *transfer) {
         /* Mark transfer as deleted. */
         for (i = 0; i < LIBUVC_NUM_TRANSFER_BUFS; i++) {
           if (strmh->transfers[i] == transfer) {
-            printf("Freeing failed transfer %d (%p)", i, transfer);
+            printf("Freeing failed transfer %d (%p)\n", i, transfer);
             free(transfer->buffer);
             libusb_free_transfer(transfer);
             strmh->transfers[i] = NULL;
@@ -921,7 +921,7 @@ void LIBUSB_CALL _uvc_stream_callback(struct libusb_transfer *transfer) {
           }
         }
         if (i == LIBUVC_NUM_TRANSFER_BUFS) {
-          printf("failed transfer %p not found; not freeing!", transfer);
+          printf("failed transfer %p not found; not freeing!\n", transfer);
         }
 
         pthread_cond_broadcast(&strmh->cb_cond);
@@ -934,7 +934,7 @@ void LIBUSB_CALL _uvc_stream_callback(struct libusb_transfer *transfer) {
       /* Mark transfer as deleted. */
       for(i=0; i < LIBUVC_NUM_TRANSFER_BUFS; i++) {
         if(strmh->transfers[i] == transfer) {
-          printf("Freeing orphan transfer %d (%p)", i, transfer);
+          printf("Freeing orphan transfer %d (%p)\n", i, transfer);
           free(transfer->buffer);
           libusb_free_transfer(transfer);
           strmh->transfers[i] = NULL;
@@ -942,7 +942,7 @@ void LIBUSB_CALL _uvc_stream_callback(struct libusb_transfer *transfer) {
         }
       }
       if(i == LIBUVC_NUM_TRANSFER_BUFS ) {
-        printf("orphan transfer %p not found; not freeing!", transfer);
+        printf("orphan transfer %p not found; not freeing!\n", transfer);
       }
 
       pthread_cond_broadcast(&strmh->cb_cond);
@@ -1240,7 +1240,7 @@ uvc_error_t uvc_stream_start(
                                            altsetting->bAlternateSetting);
     if (ret != UVC_SUCCESS) {
       printf("FAILED libusb_set_interface_alt_setting\n");
-      printf("libusb_set_interface_alt_setting failed");
+      printf("libusb_set_interface_alt_setting failed\n");
       goto fail;
     }
 
@@ -1287,7 +1287,7 @@ uvc_error_t uvc_stream_start(
     ret = libusb_submit_transfer(strmh->transfers[transfer_id]);
     if (ret != UVC_SUCCESS) {
       printf("FAILED libusb_submit_transfer: %d\n", ret);
-      printf("libusb_submit_transfer failed: %d",ret);
+      printf("libusb_submit_transfer failed: %d\n",ret);
       break;
     }
   }
