@@ -497,9 +497,9 @@ uvc_error_t uvc_get_stream_ctrl_format_size(
         UVC_DEBUG("claiming streaming interface %d", stream_if->bInterfaceNumber );
         uvc_claim_if(devh, ctrl->bInterfaceNumber);
         /* get the max values */
-        // uvc_query_stream_ctrl( devh, ctrl, 1, UVC_GET_MIN);
-        // printf("\n\nMIN SETTINGS: \n");
-        // uvc_print_stream_ctrl(ctrl, stderr);
+        uvc_query_stream_ctrl( devh, ctrl, 1, UVC_GET_MIN);
+        printf("\n\nMIN SETTINGS: \n");       // min settings just for logging, overwritten by max below
+        uvc_print_stream_ctrl(ctrl, stderr);
         // uint16_t min_kfr = ctrl->wKeyFrameRate;
         // uint16_t min_pfr = ctrl->wPFrameRate;
         // uint16_t min_comp_window = ctrl->wCompWindowSize;
@@ -565,6 +565,8 @@ found:
 
   printf("\n\nNegotiated control settings:\n");
   uvc_print_stream_ctrl(ctrl, stderr);
+  printf("\n\n");
+
   return out;
 }
 
@@ -1174,7 +1176,7 @@ uvc_error_t uvc_stream_start(
     int alt_idx, ep_idx;
     
     printf("PRIOR %d, %d\n", strmh->cur_ctrl.dwMaxPayloadTransferSize, strmh->cur_ctrl.dwMaxVideoFrameSize);
-    strmh->cur_ctrl.dwMaxPayloadTransferSize = 940; 
+    // strmh->cur_ctrl.dwMaxPayloadTransferSize = 940; 
     // strmh->cur_ctrl.dwMaxPayloadTransferSize = 1600;     // this works!
     // strmh->cur_ctrl.dwMaxVideoFrameSize = 512;           // highest setting that doesn't work for some reason
 
