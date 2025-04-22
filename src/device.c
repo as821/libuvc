@@ -334,7 +334,7 @@ uvc_error_t uvc_wrap(
 
   uvc_device_t *dev = NULL;
   int err = libusb_wrap_sys_device(context->usb_ctx, sys_dev, &usb_devh);
-  UVC_DEBUG("libusb_wrap_sys_device() = %d", err);
+  printf("libusb_wrap_sys_device() = %d", err);
   if (err != LIBUSB_SUCCESS) {
     UVC_EXIT(err);
     return err;
@@ -366,7 +366,7 @@ uvc_error_t uvc_open(
   UVC_ENTER();
 
   ret = libusb_open(dev->usb_dev, &usb_devh);
-  UVC_DEBUG("libusb_open() = %d", ret);
+  printf("libusb_open() = %d", ret);
 
   if (ret != UVC_SUCCESS) {
     UVC_EXIT(ret);
@@ -399,7 +399,7 @@ static uvc_error_t uvc_open_internal(
   if (ret != UVC_SUCCESS)
     goto fail;
 
-  UVC_DEBUG("claiming control interface %d", internal_devh->info->ctrl_if.bInterfaceNumber);
+  printf("claiming control interface %d", internal_devh->info->ctrl_if.bInterfaceNumber);
   ret = uvc_claim_if(internal_devh, internal_devh->info->ctrl_if.bInterfaceNumber);
   if (ret != UVC_SUCCESS)
     goto fail;
@@ -423,7 +423,7 @@ static uvc_error_t uvc_open_internal(
                                    internal_devh,
                                    0);
     ret = libusb_submit_transfer(internal_devh->status_xfer);
-    UVC_DEBUG("libusb_submit_transfer() = %d", ret);
+    printf("libusb_submit_transfer() = %d", ret);
 
     if (ret) {
       fprintf(stderr,
@@ -676,7 +676,7 @@ uvc_error_t uvc_get_device_descriptor(
 
     libusb_close(usb_devh);
   } else {
-    UVC_DEBUG("can't open device %04x:%04x, not fetching serial etc.",
+    printf("can't open device %04x:%04x, not fetching serial etc.",
 	      usb_desc.idVendor, usb_desc.idProduct);
   }
 
@@ -817,9 +817,9 @@ uvc_error_t uvc_get_device_list(
       list_internal[num_uvc_devices - 1] = uvc_dev;
       list_internal[num_uvc_devices] = NULL;
 
-      UVC_DEBUG("    UVC: %d", dev_idx);
+      printf("    UVC: %d", dev_idx);
     } else {
-      UVC_DEBUG("non-UVC: %d", dev_idx);
+      printf("non-UVC: %d", dev_idx);
     }
   }
 
@@ -1020,7 +1020,7 @@ uvc_error_t uvc_claim_if(uvc_device_handle_t *devh, int idx) {
   UVC_ENTER();
 
   if ( devh->claimed & ( 1 << idx )) {
-    UVC_DEBUG("attempt to claim already-claimed interface %d\n", idx );
+    printf("attempt to claim already-claimed interface %d\n", idx );
     UVC_EXIT(ret);
     return ret;
   }
@@ -1030,12 +1030,12 @@ uvc_error_t uvc_claim_if(uvc_device_handle_t *devh, int idx) {
   ret = libusb_detach_kernel_driver(devh->usb_devh, idx);
 
   if (ret == UVC_SUCCESS || ret == LIBUSB_ERROR_NOT_FOUND || ret == LIBUSB_ERROR_NOT_SUPPORTED) {
-    UVC_DEBUG("claiming interface %d", idx);
+    printf("claiming interface %d", idx);
     if (!( ret = libusb_claim_interface(devh->usb_devh, idx))) {
       devh->claimed |= ( 1 << idx );
     }
   } else {
-    UVC_DEBUG("not claiming interface %d: unable to detach kernel driver (%s)",
+    printf("not claiming interface %d: unable to detach kernel driver (%s)",
               idx, uvc_strerror(ret));
   }
 
@@ -1054,9 +1054,9 @@ uvc_error_t uvc_release_if(uvc_device_handle_t *devh, int idx) {
   int ret = UVC_SUCCESS;
 
   UVC_ENTER();
-  UVC_DEBUG("releasing interface %d", idx);
+  printf("releasing interface %d", idx);
   if (!( devh->claimed & ( 1 << idx ))) {
-    UVC_DEBUG("attempt to release unclaimed interface %d\n", idx );
+    printf("attempt to release unclaimed interface %d\n", idx );
     UVC_EXIT(ret);
     return ret;
   }
@@ -1073,11 +1073,11 @@ uvc_error_t uvc_release_if(uvc_device_handle_t *devh, int idx) {
     ret = libusb_attach_kernel_driver(devh->usb_devh, idx);
 
     if (ret == UVC_SUCCESS) {
-      UVC_DEBUG("reattached kernel driver to interface %d", idx);
+      printf("reattached kernel driver to interface %d", idx);
     } else if (ret == LIBUSB_ERROR_NOT_FOUND || ret == LIBUSB_ERROR_NOT_SUPPORTED) {
       ret = UVC_SUCCESS;  /* NOT_FOUND and NOT_SUPPORTED are OK: nothing to do */
     } else {
-      UVC_DEBUG("error reattaching kernel driver to interface %d: %s",
+      printf("error reattaching kernel driver to interface %d: %s",
                 idx, uvc_strerror(ret));
     }
   }
@@ -1694,7 +1694,7 @@ uvc_error_t uvc_parse_vs(
     ret = uvc_parse_vs_input_header(stream_if, block, block_size);
     break;
   case UVC_VS_OUTPUT_HEADER:
-    UVC_DEBUG("unsupported descriptor subtype VS_OUTPUT_HEADER");
+    printf("unsupported descriptor subtype VS_OUTPUT_HEADER");
     break;
   case UVC_VS_STILL_IMAGE_FRAME:
     ret = uvc_parse_vs_still_image_frame(stream_if, block, block_size);
@@ -1710,13 +1710,13 @@ uvc_error_t uvc_parse_vs(
     ret = uvc_parse_vs_frame_uncompressed(stream_if, block, block_size);
     break;
   case UVC_VS_FORMAT_MPEG2TS:
-    UVC_DEBUG("unsupported descriptor subtype VS_FORMAT_MPEG2TS");
+    printf("unsupported descriptor subtype VS_FORMAT_MPEG2TS");
     break;
   case UVC_VS_FORMAT_DV:
-    UVC_DEBUG("unsupported descriptor subtype VS_FORMAT_DV");
+    printf("unsupported descriptor subtype VS_FORMAT_DV");
     break;
   case UVC_VS_COLORFORMAT:
-    UVC_DEBUG("unsupported descriptor subtype VS_COLORFORMAT");
+    printf("unsupported descriptor subtype VS_COLORFORMAT");
     break;
   case UVC_VS_FORMAT_FRAME_BASED:
     ret = uvc_parse_vs_frame_format ( stream_if, block, block_size );
@@ -1725,11 +1725,11 @@ uvc_error_t uvc_parse_vs(
     ret = uvc_parse_vs_frame_frame ( stream_if, block, block_size );
     break;
   case UVC_VS_FORMAT_STREAM_BASED:
-    UVC_DEBUG("unsupported descriptor subtype VS_FORMAT_STREAM_BASED");
+    printf("unsupported descriptor subtype VS_FORMAT_STREAM_BASED");
     break;
   default:
     /** @todo handle JPEG and maybe still frames or even DV... */
-    //UVC_DEBUG("unsupported descriptor subtype: %d",descriptor_subtype);
+    //printf("unsupported descriptor subtype: %d",descriptor_subtype);
     break;
   }
 
@@ -1824,7 +1824,7 @@ void uvc_process_control_status(uvc_device_handle_t *devh, unsigned char *data, 
   UVC_ENTER();
 
   if (len < 5) {
-    UVC_DEBUG("Short read of VideoControl status update (%d bytes)", len);
+    printf("Short read of VideoControl status update (%d bytes)", len);
     UVC_EXIT_VOID();
     return;
   }
@@ -1834,13 +1834,13 @@ void uvc_process_control_status(uvc_device_handle_t *devh, unsigned char *data, 
   selector = data[3];
 
   if (originator == 0) {
-    UVC_DEBUG("Unhandled update from VC interface");
+    printf("Unhandled update from VC interface");
     UVC_EXIT_VOID();
     return;  /* @todo VideoControl virtual entity interface updates */
   }
 
   if (event != 0) {
-    UVC_DEBUG("Unhandled VC event %d", (int) event);
+    printf("Unhandled VC event %d", (int) event);
     UVC_EXIT_VOID();
     return;
   }
@@ -1866,7 +1866,7 @@ void uvc_process_control_status(uvc_device_handle_t *devh, unsigned char *data, 
   }
 
   if (!found_entity) {
-    UVC_DEBUG("Got status update for unknown VideoControl entity %d",
+    printf("Got status update for unknown VideoControl entity %d",
   (int) originator);
     UVC_EXIT_VOID();
     return;
@@ -1876,11 +1876,11 @@ void uvc_process_control_status(uvc_device_handle_t *devh, unsigned char *data, 
   content = data + 5;
   content_len = len - 5;
 
-  UVC_DEBUG("Event: class=%d, event=%d, selector=%d, attribute=%d, content_len=%zd",
+  printf("Event: class=%d, event=%d, selector=%d, attribute=%d, content_len=%zd",
     status_class, event, selector, attribute, content_len);
 
   if(devh->status_cb) {
-    UVC_DEBUG("Running user-supplied status callback");
+    printf("Running user-supplied status callback");
     devh->status_cb(status_class,
                     event,
                     selector,
@@ -1897,27 +1897,27 @@ void uvc_process_streaming_status(uvc_device_handle_t *devh, unsigned char *data
   UVC_ENTER();
 
   if (len < 3) {
-    UVC_DEBUG("Invalid streaming status event received.\n");
+    printf("Invalid streaming status event received.\n");
     UVC_EXIT_VOID();
     return;
   }
 
   if (data[2] == 0) {
     if (len < 4) {
-      UVC_DEBUG("Short read of status update (%d bytes)", len);
+      printf("Short read of status update (%d bytes)", len);
       UVC_EXIT_VOID();
       return;
     }
-    UVC_DEBUG("Button (intf %u) %s len %d\n", data[1], data[3] ? "pressed" : "released", len);
+    printf("Button (intf %u) %s len %d\n", data[1], data[3] ? "pressed" : "released", len);
     
     if(devh->button_cb) {
-      UVC_DEBUG("Running user-supplied button callback");
+      printf("Running user-supplied button callback");
       devh->button_cb(data[1],
                       data[3],
                       devh->button_user_ptr);
     }
   } else {
-    UVC_DEBUG("Stream %u error event %02x %02x len %d.\n", data[1], data[2], data[3], len);
+    printf("Stream %u error event %02x %02x len %d.\n", data[1], data[2], data[3], len);
   }
 
   UVC_EXIT_VOID();
@@ -1955,7 +1955,7 @@ void LIBUSB_CALL _uvc_status_callback(struct libusb_transfer *transfer) {
   case LIBUSB_TRANSFER_ERROR:
   case LIBUSB_TRANSFER_CANCELLED:
   case LIBUSB_TRANSFER_NO_DEVICE:
-    UVC_DEBUG("not processing/resubmitting, status = %d", transfer->status);
+    printf("not processing/resubmitting, status = %d", transfer->status);
     UVC_EXIT_VOID();
     return;
   case LIBUSB_TRANSFER_COMPLETED:
@@ -1964,7 +1964,7 @@ void LIBUSB_CALL _uvc_status_callback(struct libusb_transfer *transfer) {
   case LIBUSB_TRANSFER_TIMED_OUT:
   case LIBUSB_TRANSFER_STALL:
   case LIBUSB_TRANSFER_OVERFLOW:
-    UVC_DEBUG("retrying transfer, status = %d", transfer->status);
+    printf("retrying transfer, status = %d", transfer->status);
     break;
   }
 
