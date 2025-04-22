@@ -495,11 +495,20 @@ uvc_error_t uvc_get_stream_ctrl_format_size(
         UVC_DEBUG("claiming streaming interface %d", stream_if->bInterfaceNumber );
         uvc_claim_if(devh, ctrl->bInterfaceNumber);
         /* get the max values */
-        uvc_query_stream_ctrl( devh, ctrl, 1, UVC_GET_MAX);
-        // ctrl->dwMaxPayloadTransferSize = 512;
-        printf("\n\nSTREAMING INTERFACE: %d (%u)\n", stream_if->bInterfaceNumber, ctrl->dwMaxPayloadTransferSize);
-        // continue;
+        uvc_query_stream_ctrl( devh, ctrl, 1, UVC_GET_MIN);
+        printf("\n\nMIN SETTINGS: \n");
+        uvc_print_stream_ctrl(ctrl, stderr);
 
+        uvc_query_stream_ctrl( devh, ctrl, 1, UVC_GET_MAX);
+        printf("\n\nMAX SETTINGS: \n");
+        uvc_print_stream_ctrl(ctrl, stderr);
+
+
+
+        // TODO: query min + set the compression parameters same as the Linux UVC driver
+
+
+        printf("\n\nSTREAMING INTERFACE: %d (%u)\n", stream_if->bInterfaceNumber, ctrl->dwMaxPayloadTransferSize);
 
         if (frame->intervals) {
           for (interval = frame->intervals; *interval; ++interval) {
